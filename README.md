@@ -1,140 +1,188 @@
-# Plataforma de Cursos - API
+# N1 TCSW2 - Plataforma de Cursos
 
-Backend da Plataforma de Cursos Online desenvolvido com NestJS, TypeScript, Prisma ORM e PostgreSQL.
-
-O projeto contém a API REST inicial de usuários e o modelo relacional da plataforma, preparado para a futura integração com o frontend em React e TypeScript.
+API REST para gerenciar uma plataforma de cursos online. O backend cobre catálogo, conteúdo acadêmico, matrículas, progresso, avaliações, trilhas, certificados, planos, assinaturas e pagamentos.
 
 ## Tecnologias
 
-- Node.js
-- NestJS
-- TypeScript
-- Prisma ORM
-- PostgreSQL
-- Swagger/OpenAPI
-- Jest
+- Node.js e TypeScript;
+- NestJS 11;
+- Prisma ORM 7;
+- PostgreSQL;
+- Passport e JWT;
+- bcrypt;
+- Swagger/OpenAPI;
+- Jest.
 
-## Modelo de dados
+## Funcionalidades
 
-O schema Prisma contempla as seguintes áreas:
-
-- **Core:** usuários, categorias e cursos;
-- **Conteúdo:** módulos e aulas;
-- **Interação:** matrículas, progresso de aulas e avaliações;
-- **Curadoria:** trilhas, cursos das trilhas e certificados;
-- **Negócio:** planos, assinaturas e pagamentos.
-
-O modelo `User` original permanece temporariamente no schema para manter compatibilidade com o módulo atual de usuários. A integração dele com o novo modelo `Usuario` será realizada em uma etapa posterior.
-
-## Pré-requisitos
-
-- Node.js 20 ou superior;
-- npm;
-- PostgreSQL disponível local ou remotamente.
+- Cadastro de usuários com senha protegida por bcrypt;
+- Login e autorização por Bearer Token JWT;
+- CRUD de categorias, cursos, módulos e aulas;
+- Hierarquia `Curso > Módulo > Aula`, respeitando a ordem;
+- Atualização automática do total de aulas e da carga horária do curso;
+- Matrículas e conclusão automática quando todas as aulas forem finalizadas;
+- Progresso por usuário e aula;
+- Avaliações de cursos com notas de 1 a 5;
+- Trilhas de conhecimento e associação ordenada de cursos;
+- Emissão e verificação pública de certificados;
+- CRUD de planos e gestão de assinaturas;
+- Checkout transacional com registro de pagamento;
+- Paginação e filtros na listagem de cursos;
+- Documentação interativa no Swagger;
+- Tratamento HTTP para erros comuns do Prisma.
 
 ## Instalação
 
-Clone o repositório e instale as dependências:
-
 ```bash
-git clone https://github.com/ThHSzR/tcsw2-lab01.git
-cd tcsw2-lab01
+git clone https://github.com/ThHSzR/n1-tcsw2.git
+cd n1-tcsw2
 npm install
 ```
 
-## Configuração do banco
+Copie o arquivo de exemplo e configure o PostgreSQL:
 
-Crie um arquivo `.env` na raiz do projeto:
+```bash
+cp .env.example .env
+```
+
+Variáveis necessárias:
 
 ```env
-DATABASE_URL="postgresql://usuario:senha@localhost:5432/plataforma_cursos?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/plataforma_cursos?schema=public"
+JWT_SECRET="uma-chave-longa-aleatoria-e-secreta"
 PORT=3000
 ```
 
-Substitua usuário, senha, porta e banco pelos dados da sua instalação do PostgreSQL.
+Não publique o arquivo `.env` nem utilize a chave de exemplo em produção.
 
-Gere o Prisma Client e aplique as migrações:
+## Banco de dados
+
+Gere o cliente Prisma e aplique as migrações:
 
 ```bash
-npx prisma generate
-npx prisma migrate dev
+npm run prisma:generate
+npm run db:migrate
 ```
 
-Para apenas aplicar migrações em um ambiente de execução, sem criar novas migrações:
+Em implantação/produção, aplique migrações já versionadas com:
 
 ```bash
-npx prisma migrate deploy
+npm run db:deploy
 ```
 
-## Executando a aplicação
+Para inspecionar as tabelas e registros:
 
 ```bash
-# Desenvolvimento
+npm run db:studio
+```
+
+## Execução
+
+```bash
+# Desenvolvimento com recarregamento automático
 npm run start:dev
 
-# Execução normal
-npm run start
-
-# Build de produção
+# Build e execução de produção
 npm run build
 npm run start:prod
 ```
 
-A API será disponibilizada em `http://localhost:3000` por padrão.
+- API: `http://localhost:3000`
+- Swagger: `http://localhost:3000/api`
 
-## Documentação da API
+## Autenticação
 
-Com a aplicação em execução, acesse o Swagger:
+O cadastro e o login são públicos:
 
-```text
-http://localhost:3000/api
+```http
+POST /usuarios
+POST /auth/login
 ```
 
-Atualmente, o módulo REST disponível é o de usuários. Os endpoints das novas entidades serão adicionados durante a integração das próximas etapas.
+Exemplo de cadastro:
 
-## Visualizando as tabelas
-
-Para abrir uma interface gráfica com as tabelas e registros do banco:
-
-```bash
-npx prisma studio
+```json
+{
+  "nomeCompleto": "João Silva",
+  "email": "joao@email.com",
+  "senha": "senha123"
+}
 ```
 
-O Prisma Studio ficará disponível normalmente em `http://localhost:5555`.
+Exemplo de login:
 
-## Testes e validação
-
-```bash
-# Testes unitários
-npm test
-
-# Testes end-to-end
-npm run test:e2e
-
-# Cobertura
-npm run test:cov
-
-# Validar o schema Prisma
-npx prisma validate
+```json
+{
+  "email": "joao@email.com",
+  "senha": "senha123"
+}
 ```
 
-## Estrutura principal
+Envie o token retornado nas demais rotas:
+
+```http
+Authorization: Bearer SEU_TOKEN
+```
+
+No Swagger, clique em **Authorize** e informe o token.
+
+## Principais endpoints
+
+| Área         | Rotas                                                  |
+| ------------ | ------------------------------------------------------ |
+| Autenticação | `POST /usuarios`, `POST /auth/login`                   |
+| Usuários     | `GET/PATCH/DELETE /usuarios`                           |
+| Catálogo     | `/categorias`, `/cursos`                               |
+| Conteúdo     | `/modulos`, `/aulas`                                   |
+| Curadoria    | `/trilhas`, `/trilhas/:id/cursos`                      |
+| Aprendizagem | `/matriculas`, `/progresso`, `/avaliacoes`             |
+| Certificados | `/certificados`, `GET /certificados/verificar/:codigo` |
+| Financeiro   | `/planos`, `/assinaturas`, `/pagamentos`, `/checkout`  |
+
+Com exceção do cadastro, login e verificação de certificado, as rotas exigem JWT.
+
+### Filtros de cursos
+
+`GET /cursos` aceita:
+
+- `pagina` e `limite`;
+- `busca`;
+- `idCategoria`;
+- `idInstrutor`;
+- `nivel`: `INICIANTE`, `INTERMEDIARIO` ou `AVANCADO`.
+
+## Modelo de dados
+
+O schema está organizado em:
+
+- **Core:** `Usuario`, `Categoria` e `Curso`;
+- **Conteúdo:** `Modulo` e `Aula`;
+- **Interação:** `Matricula`, `ProgressoAula` e `Avaliacao`;
+- **Curadoria:** `Trilha`, `TrilhaCurso` e `Certificado`;
+- **Negócio:** `Plano`, `Assinatura` e `Pagamento`.
+
+O modelo `User` permanece apenas para compatibilidade com a sequência histórica de migrações. A API utiliza exclusivamente o modelo `Usuario`.
+
+## Estrutura
 
 ```text
 prisma/
-  migrations/        Migrações SQL do banco
-  schema.prisma      Entidades, relações e restrições
+  migrations/          Migrações versionadas
+  schema.prisma        Modelos e relacionamentos
 src/
-  generated/prisma/  Cliente Prisma gerado
-  prisma/            Serviço e módulo de acesso ao banco
-  users/             API REST atual de usuários
-  app.module.ts      Módulo principal da aplicação
-  main.ts            Inicialização e configuração do Swagger
+  auth/                Login e estratégia JWT
+  common/filters/      Conversão de erros Prisma para HTTP
+  platform/            Catálogo, aprendizagem e negócio
+  prisma/              PrismaService compartilhado
+  users/               Cadastro e gestão de usuários
+  main.ts              Bootstrap, validação, CORS e Swagger
 ```
 
-## Próximas etapas
+## Qualidade
 
-- Integrar o modelo legado `User` ao modelo acadêmico `Usuario`;
-- Implementar módulos, serviços e controllers para as novas entidades;
-- Adicionar autenticação e autorização;
-- Integrar o backend ao frontend React com TypeScript e Bootstrap.
+```bash
+npm run build
+npm test -- --runInBand
+npm run lint
+npx prisma validate
+```
