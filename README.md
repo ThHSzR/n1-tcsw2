@@ -1,6 +1,6 @@
 # N1 TCSW2 - Plataforma de Cursos
 
-API REST para gerenciar uma plataforma de cursos online. O backend cobre catálogo, conteúdo acadêmico, matrículas, progresso, avaliações, trilhas, certificados, planos, assinaturas e pagamentos.
+Plataforma full stack para gerenciar cursos online. O backend cobre catálogo, conteúdo acadêmico, matrículas, progresso, avaliações, trilhas, certificados, planos, assinaturas e pagamentos. O frontend oferece uma experiência responsiva para operar toda a plataforma.
 
 ## Tecnologias
 
@@ -12,6 +12,7 @@ API REST para gerenciar uma plataforma de cursos online. O backend cobre catálo
 - bcrypt;
 - Swagger/OpenAPI;
 - Jest.
+- React 19, Vite e Bootstrap 5.
 
 ## Funcionalidades
 
@@ -37,6 +38,7 @@ API REST para gerenciar uma plataforma de cursos online. O backend cobre catálo
 git clone https://github.com/ThHSzR/n1-tcsw2.git
 cd n1-tcsw2
 npm install
+npm run frontend:install
 ```
 
 Copie o arquivo de exemplo e configure o PostgreSQL:
@@ -89,6 +91,16 @@ npm run start:prod
 
 - API: `http://localhost:3000`
 - Swagger: `http://localhost:3000/api`
+
+Em outro terminal, inicie o frontend:
+
+```bash
+npm run frontend:dev
+```
+
+- Frontend: `http://localhost:5173`
+
+Para alterar a URL da API consumida pelo frontend, copie `frontend/.env.example` para `frontend/.env` e ajuste `VITE_API_URL`.
 
 ## Autenticação
 
@@ -176,6 +188,11 @@ src/
   prisma/              PrismaService compartilhado
   users/               Cadastro e gestão de usuários
   main.ts              Bootstrap, validação, CORS e Swagger
+frontend/
+  src/components/      Layout e componentes reutilizáveis
+  src/context/         Sessão JWT
+  src/pages/           Telas da plataforma
+  src/lib/api.ts       Cliente HTTP da API
 ```
 
 ## Qualidade
@@ -185,4 +202,6 @@ npm run build
 npm test -- --runInBand
 npm run lint
 npx prisma validate
+npm run frontend:build
+npm --prefix frontend run lint
 ```
