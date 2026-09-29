@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { api } from '../lib/api';
+import { api, TOKEN_KEY } from '../lib/api';
 
 interface Session {
   idUsuario: number;
@@ -18,6 +18,7 @@ interface AuthContextValue {
   session: Session | null;
   loading: boolean;
   login: (email: string, senha: string) => Promise<void>;
+  register: (nomeCompleto: string, email: string, senha: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -40,18 +41,18 @@ function readSession(token: string | null): Session | null {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(() =>
-    readSession(localStorage.getItem('nexo.token')),
+    readSession(localStorage.getItem(TOKEN_KEY)),
   );
   const [loading, setLoading] = useState(false);
 
   const logout = () => {
-    localStorage.removeItem('nexo.token');
+    localStorage.removeItem(TOKEN_KEY);
     setSession(null);
   };
 
   useEffect(() => {
-    window.addEventListener('nexo:unauthorized', logout);
-    return () => window.removeEventListener('nexo:unauthorized', logout);
+    window.addEventListener('sgcursos:unauthorized', logout);
+    return () => window.removeEventListener('sgcursos:unauthorized', logout);
   }, []);
 
   const login = async (email: string, senha: string) => {
@@ -61,7 +62,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'POST',
         body: JSON.stringify({ email, senha }),
       });
-      localStorage.setItem('nexo.token', result.accessToken);
+      localStorage.setItem(TOKEN_KEY, result.accessToken);
+      setSession(readSession(result.accessToken));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (nomeCompleto: string, email: string, senha: string) => {
+    setLoading(true);
+    try {
+      await api('/usuarios', {
+        method: 'POST',
+        body: JSON.stringify({ nomeCompleto, email, senha }),
+      });
+      const result = await api<{ accessToken: string }>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, senha }),
+      });
+      localStorage.setItem(TOKEN_KEY, result.accessToken);
       setSession(readSession(result.accessToken));
     } finally {
       setLoading(false);
@@ -69,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const value = useMemo(
-    () => ({ session, loading, login, logout }),
+    () => ({ session, loading, login, register, logout }),
     [session, loading],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

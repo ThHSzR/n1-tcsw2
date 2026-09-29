@@ -12,7 +12,7 @@ Plataforma full stack para gerenciar cursos online. O backend cobre catálogo, c
 - bcrypt;
 - Swagger/OpenAPI;
 - Jest.
-- React 19, Vite e Bootstrap 5.
+- React 19, Vite, React Router e Bootstrap Icons.
 
 ## Funcionalidades
 
@@ -31,6 +31,9 @@ Plataforma full stack para gerenciar cursos online. O backend cobre catálogo, c
 - Paginação e filtros na listagem de cursos;
 - Documentação interativa no Swagger;
 - Tratamento HTTP para erros comuns do Prisma.
+- Painel administrativo SG Cursos com as telas de todas as áreas da API;
+- Cadastro, login JWT, restauração da sessão e logout automático ao expirar;
+- Interface adaptada do projeto [`curso-tcsw`](https://github.com/ThHSzR/curso-tcsw).
 
 ## Instalação
 
@@ -189,10 +192,11 @@ src/
   users/               Cadastro e gestão de usuários
   main.ts              Bootstrap, validação, CORS e Swagger
 frontend/
-  src/components/      Layout e componentes reutilizáveis
-  src/context/         Sessão JWT
-  src/pages/           Telas da plataforma
-  src/lib/api.ts       Cliente HTTP da API
+  src/components/      Modal, busca, notificações e componentes reutilizáveis
+  src/context/         Sessão e autenticação JWT
+  src/pages/           Dashboard e telas CRUD da plataforma
+  src/services/        Adaptação dos DTOs da API para a interface
+  src/lib/api.ts       Cliente HTTP autenticado
 ```
 
 ## Qualidade

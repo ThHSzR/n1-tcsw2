@@ -1,0 +1,99 @@
+import { useEffect, useState } from 'react';
+import type { Usuario } from '../../services/usuarioService';
+import { usuarioService } from '../../services/usuarioService';
+
+export function Usuarios() {
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [form, setForm] = useState<Omit<Usuario, 'id'>>({
+    nomeCompleto: '', email: '', senhaHash: '',
+    dataCadastro: new Date().toISOString().split('T')[0],
+  });
+  const [editId, setEditId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = () => { setLoading(true); usuarioService.getAll().then(d => { setUsuarios(d); setLoading(false); }); };
+  useEffect(() => { load(); }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editId !== null) { await usuarioService.update(editId, form); }
+    else { await usuarioService.create(form); }
+    setForm({ nomeCompleto: '', email: '', senhaHash: '', dataCadastro: new Date().toISOString().split('T')[0] });
+    setEditId(null); load();
+  };
+
+  const handleEdit = (u: Usuario) => {
+    setForm({ nomeCompleto: u.nomeCompleto, email: u.email, senhaHash: u.senhaHash, dataCadastro: u.dataCadastro });
+    setEditId(u.id);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Excluir este usuário?')) return;
+    await usuarioService.remove(id); load();
+  };
+
+  return (
+    <div className="page-container">
+      <div className="page-header"><h2>Usuários</h2></div>
+
+      <div className="card mb-4">
+        <div className="card-body">
+          <h5 className="card-title mb-3">{editId ? 'Editar Usuário' : 'Novo Usuário'}</h5>
+          <form onSubmit={handleSubmit}>
+            <div className="row g-3">
+              <div className="col-md-3">
+                <label className="form-label">Nome Completo</label>
+                <input className="form-control" value={form.nomeCompleto} onChange={e => setForm({ ...form, nomeCompleto: e.target.value })} required />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label">E-mail</label>
+                <input type="email" className="form-control" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label">Senha</label>
+                <input type="password" className="form-control" value={form.senhaHash} onChange={e => setForm({ ...form, senhaHash: e.target.value })} required={editId === null} placeholder={editId ? 'Deixe em branco para manter' : ''} />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label">Data de Cadastro</label>
+                <input type="date" className="form-control" value={form.dataCadastro} onChange={e => setForm({ ...form, dataCadastro: e.target.value })} required />
+              </div>
+            </div>
+            <div className="d-flex gap-2 mt-3">
+              <button type="submit" className="btn btn-primary">{editId ? 'Salvar' : 'Cadastrar'}</button>
+              {editId && <button type="button" className="btn btn-secondary" onClick={() => { setForm({ nomeCompleto: '', email: '', senhaHash: '', dataCadastro: new Date().toISOString().split('T')[0] }); setEditId(null); }}>Cancelar</button>}
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-4"><div className="spinner-border text-primary" /></div>
+      ) : (
+        <div className="card">
+          <div className="card-body p-0">
+            <table className="table table-hover mb-0">
+              <thead>
+                <tr><th>#</th><th>Nome Completo</th><th>E-mail</th><th>Data Cadastro</th><th style={{ width: 100 }}>Ações</th></tr>
+              </thead>
+              <tbody>
+                {usuarios.map(u => (
+                  <tr key={u.id}>
+                    <td>{u.id}</td>
+                    <td>{u.nomeCompleto}</td>
+                    <td>{u.email}</td>
+                    <td>{u.dataCadastro}</td>
+                    <td>
+                      <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleEdit(u)}><i className="bi bi-pencil" /></button>
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(u.id)}><i className="bi bi-trash" /></button>
+                    </td>
+                  </tr>
+                ))}
+                {usuarios.length === 0 && <tr><td colSpan={5} className="text-center text-muted py-4">Nenhum usuário cadastrado.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

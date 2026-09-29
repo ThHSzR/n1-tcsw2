@@ -1,11 +1,16 @@
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
+export const TOKEN_KEY = 'sgcursos.token';
+
 export class ApiError extends Error {
+  status: number;
+
   constructor(
     message: string,
-    public status: number,
+    status: number,
   ) {
     super(message);
+    this.status = status;
   }
 }
 
@@ -21,7 +26,7 @@ export async function api<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const token = localStorage.getItem('nexo.token');
+  const token = localStorage.getItem(TOKEN_KEY);
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
@@ -34,8 +39,8 @@ export async function api<T>(
   const data: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     if (response.status === 401 && path !== '/auth/login') {
-      localStorage.removeItem('nexo.token');
-      window.dispatchEvent(new Event('nexo:unauthorized'));
+      localStorage.removeItem(TOKEN_KEY);
+      window.dispatchEvent(new Event('sgcursos:unauthorized'));
     }
     throw new ApiError(extractMessage(data), response.status);
   }
